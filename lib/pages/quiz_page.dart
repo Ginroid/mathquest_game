@@ -2,6 +2,7 @@ import "dart:async";
 import "dart:math";
 
 import "package:flutter/material.dart";
+import "package:math_quest_2_application/pages/lost_page.dart";
 import "package:math_quest_2_application/pages/win_page.dart";
 
 class QuizPage extends StatefulWidget {
@@ -25,6 +26,7 @@ class _QuizPageState extends State<QuizPage> {
   int score = 0;
   int timeLeft = 10;
   late Timer timer;
+  int currentLevel = 1;
 
   @override
   void initState() {
@@ -149,15 +151,15 @@ class _QuizPageState extends State<QuizPage> {
           children: <Widget>[
             Text(
               'Score: $score',
-              style: const TextStyle(fontSize: 30),
+              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
             ),
             Text(
               'Level: ${widget.level}',
-              style: const TextStyle(fontSize: 30),
+              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
             ),
             Text(
               'Time left: $timeLeft',
-              style: const TextStyle(fontSize: 30),
+              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
             ),
             Text(
               feedback,
@@ -165,7 +167,7 @@ class _QuizPageState extends State<QuizPage> {
             ),
             Text(
               '$num1 $operator $num2 = ?',
-              style: const TextStyle(fontSize: 30),
+              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
             ),
             ...(options.map((option) => Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -200,12 +202,12 @@ class _QuizPageState extends State<QuizPage> {
                             );
                           }
                         } else {
-                          feedback = 'Wrong!';
-                          feedbackColor = Colors.red;
-                          score -= 5;
-                          if (score < 0) {
-                            score = 0;
-                          }
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LostPage(level: 1),
+                            ),
+                          );
                         }
                       });
                       Future.delayed(
@@ -214,7 +216,10 @@ class _QuizPageState extends State<QuizPage> {
                     child: Text(
                       option.toStringAsFixed(
                           option.truncateToDouble() == option ? 0 : 1),
-                      style: const TextStyle(fontSize: 22),
+                      style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
                     ),
                   ),
                 ))),

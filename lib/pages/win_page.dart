@@ -17,26 +17,56 @@ class WinPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'You have completed Level $level!',
-              style: const TextStyle(fontSize: 24),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 50.0),
+              child: Text(
+                'You have completed Level $level!',
+                style: const TextStyle(fontSize: 32),
+              ),
             ),
-            ElevatedButton(
-              child: const Text('Next Level'),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => QuizPage(level: level + 1),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
                   ),
-                );
-              },
-            ),
-            ElevatedButton(
-              child: const Text('Home'),
-              onPressed: () {
-                Navigator.pushNamed(context, '/');
-              },
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/');
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Row(
+                      children: <Widget>[
+                        Icon(Icons.home, size: 30.0),
+                        Text('Home', style: TextStyle(fontSize: 24)),
+                      ],
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => QuizPage(level: level + 1),
+                      ),
+                    );
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Row(
+                      children: <Widget>[
+                        Icon(Icons.arrow_forward, size: 30.0),
+                        Text('Next Level', style: TextStyle(fontSize: 24)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

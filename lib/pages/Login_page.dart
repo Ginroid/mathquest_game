@@ -54,7 +54,8 @@ class LogInPage extends StatelessWidget {
                   Colors.deepPurple,
                 ),
               ),
-              child: const Text('Submit'),
+              child:
+                  const Text('Login', style: TextStyle(color: Colors.white70)),
             ),
             const SizedBox(height: 20),
             const ExpansionTile(

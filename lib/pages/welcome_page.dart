@@ -6,19 +6,15 @@ class WelcomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.deepPurple,
-      ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            Image.network(
-              'https://i.ibb.co/TrvhpWt/mathquest.png', // your new image URL
-              height: 200, // you can adjust the size as needed
+            const SizedBox(height: 80),
+            Image.asset(
+              'assets/images/MathQuestLogo202401221154.png', // your new image URL
+              height: 400, // you can adjust the size as needed
             ),
-            const SizedBox(height: 20),
             const Text(
               'WELCOME TO MATH QUEST!',
               style: TextStyle(
@@ -32,9 +28,11 @@ class WelcomePage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>[
                 ElevatedButton.icon(
-                  icon: const Icon(Icons.family_restroom), // Family icon
+                  icon: const Icon(Icons.family_restroom,
+                      color: Colors.white), // Family icon
                   label: const Text(
                     'PARENT',
+                    style: TextStyle(color: Colors.white),
                   ),
                   onPressed: () {
                     Navigator.pushNamed(context, '/login');
@@ -46,8 +44,10 @@ class WelcomePage extends StatelessWidget {
                   ),
                 ),
                 ElevatedButton.icon(
-                  icon: const Icon(Icons.school), // Kid icon
-                  label: const Text('STUDENT'),
+                  icon:
+                      const Icon(Icons.school, color: Colors.white), // Kid icon
+                  label: const Text('STUDENT',
+                      style: TextStyle(color: Colors.white)),
                   onPressed: () {
                     Navigator.pushNamed(context, '/level_selection');
                   },

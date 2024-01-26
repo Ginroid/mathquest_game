@@ -15,18 +15,18 @@ class QuizPage extends StatefulWidget {
 }
 
 class _QuizPageState extends State<QuizPage> {
-  int num1 = 0; // Initialize at declaration
-  int num2 = 0; // Initialize at declaration
-  String operator = '+'; // Initialize at declaration
-  List<double> options = []; // Initialize at declaration
-  List<double> originalOptions = []; // Initialize at declaration
+  int num1 = 0;
+  int num2 = 0;
+  String operator = '+';
+  List<double> options = [];
+  List<double> originalOptions = [];
   late double correctAnswer;
   String feedback = '';
   Color feedbackColor = Colors.black;
   int score = 0;
   int timeLeft = 10;
-  late Timer timer;
-  int currentLevel = 1;
+  Timer? timer;
+  bool hintUsed = false;
 
   @override
   void initState() {
@@ -35,16 +35,19 @@ class _QuizPageState extends State<QuizPage> {
     startTimer();
   }
 
+  int getRangeBasedOnScore() {
+    if (score < 10) {
+      return 10;
+    } else if (score < 20) {
+      return 15;
+    } else {
+      return 20;
+    }
+  }
+
   void updateQuestion() {
     setState(() {
-      int range;
-      if (score < 10) {
-        range = 10;
-      } else if (score < 20) {
-        range = 15;
-      } else {
-        range = 20;
-      }
+      int range = getRangeBasedOnScore();
       num1 = Random().nextInt(range);
       num2 = Random().nextInt(range);
       List<String> operators = ['+', '-', '×', '÷'];
@@ -60,9 +63,9 @@ class _QuizPageState extends State<QuizPage> {
           correctAnswer = (num1 * num2).toDouble();
           break;
         case '÷':
-          if (num2 != 0) {
+          if (num2 != 0 && num1 % num2 == 0) {
             correctAnswer = num1 / num2;
-            correctAnswer = double.parse(correctAnswer.toStringAsFixed(1));
+            correctAnswer = double.parse(correctAnswer.toStringAsFixed(2));
           } else {
             updateQuestion();
             return;
@@ -79,6 +82,7 @@ class _QuizPageState extends State<QuizPage> {
       options.shuffle();
       feedback = '';
       timeLeft = 10;
+      hintUsed = false;
     });
   }
 
@@ -86,11 +90,14 @@ class _QuizPageState extends State<QuizPage> {
     double option;
     do {
       option = (correctAnswer + Random().nextInt(11) - 5).toDouble();
-    } while (option == correctAnswer || originalOptions.contains(option));
+    } while (option == correctAnswer ||
+        originalOptions.contains(option) ||
+        option == 0);
     return option;
   }
 
   void startTimer() {
+    timer?.cancel();
     timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (timeLeft == 0) {
         timer.cancel();
@@ -105,18 +112,19 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   void showHint() {
-    setState(() {
-      options = List.from(originalOptions);
-      options.removeWhere((option) => option != correctAnswer);
-      if (options.length < 4) {
-        double fillerOption;
-        do {
-          fillerOption = generateUniqueOption(correctAnswer);
-        } while (
-            fillerOption == correctAnswer || options.contains(fillerOption));
-        options.add(fillerOption);
-      }
-    });
+    if (!hintUsed) {
+      setState(() {
+        options = List.from(originalOptions);
+        List<double> wrongOptions =
+            options.where((option) => option != correctAnswer).toList();
+        wrongOptions.shuffle();
+        if (wrongOptions.length > 1) {
+          options.remove(wrongOptions[0]);
+          options.remove(wrongOptions[1]);
+        }
+        hintUsed = true;
+      });
+    }
   }
 
   @override
@@ -151,15 +159,24 @@ class _QuizPageState extends State<QuizPage> {
           children: <Widget>[
             Text(
               'Score: $score',
-              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 30),
             ),
             Text(
               'Level: ${widget.level}',
-              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 30),
             ),
-            Text(
-              'Time left: $timeLeft',
-              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                const Icon(
+                  Icons.timer,
+                  size: 30,
+                ),
+                Text(
+                  'Time left: $timeLeft',
+                  style: const TextStyle(fontSize: 30),
+                ),
+              ],
             ),
             Text(
               feedback,
@@ -167,7 +184,7 @@ class _QuizPageState extends State<QuizPage> {
             ),
             Text(
               '$num1 $operator $num2 = ?',
-              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 30),
             ),
             ...(options.map((option) => Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -205,21 +222,21 @@ class _QuizPageState extends State<QuizPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const LostPage(level: 1),
+                              builder: (context) =>
+                                  LostPage(level: widget.level),
                             ),
                           );
                         }
                       });
-                      Future.delayed(
-                          const Duration(seconds: 1), updateQuestion);
+                      Future.delayed(const Duration(seconds: 1), () {
+                        updateQuestion();
+                        startTimer();
+                      });
                     },
                     child: Text(
                       option.toStringAsFixed(
-                          option.truncateToDouble() == option ? 0 : 1),
-                      style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
+                          option.truncateToDouble() == option ? 0 : 2),
+                      style: const TextStyle(fontSize: 22),
                     ),
                   ),
                 ))),

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:math_quest_2_application/pages/Login_page.dart';
+import 'package:math_quest_2_application/pages/signin_page.dart';
 import 'package:math_quest_2_application/pages/level_selection_page.dart';
 import 'package:math_quest_2_application/pages/lost_page.dart';
 import 'package:math_quest_2_application/pages/quiz_page.dart';
 import 'package:math_quest_2_application/pages/settings_page.dart';
+import 'package:math_quest_2_application/pages/signup_page.dart';
 import 'package:math_quest_2_application/pages/welcome_page.dart';
 
 void main() {
@@ -20,7 +21,8 @@ class MathGame extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const WelcomePage(),
-        '/login': (context) => const LogInPage(),
+        '/signing': (context) => const SignInPage(),
+        '/signup': (context) => const SignUpPage(),
         '/quiz': (context) => const QuizPage(level: 1),
         '/settings': (context) => const SettingsPage(),
         '/level_selection': (context) =>

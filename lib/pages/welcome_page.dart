@@ -12,8 +12,8 @@ class WelcomePage extends StatelessWidget {
           children: <Widget>[
             const SizedBox(height: 80),
             Image.asset(
-              'assets/images/MathQuestLogo202401221154.png', // your new image URL
-              height: 400, // you can adjust the size as needed
+              'assets/images/MathQuestLogo202401221154.png',
+              height: 400,
             ),
             const Text(
               'WELCOME TO MATH QUEST!',
@@ -28,8 +28,7 @@ class WelcomePage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>[
                 ElevatedButton.icon(
-                  icon: const Icon(Icons.family_restroom,
-                      color: Colors.white), // Family icon
+                  icon: const Icon(Icons.family_restroom, color: Colors.white),
                   label: const Text(
                     'PARENT',
                     style: TextStyle(color: Colors.white),

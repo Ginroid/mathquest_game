@@ -3,6 +3,7 @@ import "package:math_quest_2_application/pages/quiz_page.dart";
 
 class LostPage extends StatelessWidget {
   final int level;
+
   const LostPage({Key? key, required this.level}) : super(key: key);
 
   @override

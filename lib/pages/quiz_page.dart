@@ -1,6 +1,7 @@
 import "dart:async";
 import "dart:math";
 
+import "package:audioplayers/audioplayers.dart";
 import "package:flutter/material.dart";
 import "package:math_quest_2_application/pages/lost_page.dart";
 import "package:math_quest_2_application/pages/win_page.dart";
@@ -27,6 +28,10 @@ class _QuizPageState extends State<QuizPage> {
   int timeLeft = 10;
   Timer? timer;
   bool hintUsed = false;
+
+  AudioPlayer audioPlayer = AudioPlayer();
+  final correctAnswerSound = 'sounds/correct_answer.mp3';
+  final wrongAnswerSound = 'sounds/false_answer.mp3';
 
   @override
   void initState() {
@@ -127,6 +132,10 @@ class _QuizPageState extends State<QuizPage> {
     }
   }
 
+  Future<void> playSound(String path) async {
+    await audioPlayer.play(AssetSource(path));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -203,35 +212,41 @@ class _QuizPageState extends State<QuizPage> {
                         Colors.deepPurple,
                       ),
                     ),
-                    onPressed: () {
-                      setState(() {
-                        if (option == correctAnswer) {
+                    onPressed: () async {
+                      bool isCorrect = option == correctAnswer;
+
+                      await playSound(
+                          isCorrect ? correctAnswerSound : wrongAnswerSound);
+                      if (isCorrect) {
+                        setState(() {
                           feedback = 'Correct!';
                           feedbackColor = Colors.green;
                           score += 10;
-                          if (score == 100) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    WinPage(level: widget.level),
-                              ),
-                            );
-                          }
-                        } else {
+                        });
+                        if (score == 100) {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  LostPage(level: widget.level),
+                                  WinPage(level: widget.level),
                             ),
                           );
                         }
-                      });
-                      Future.delayed(const Duration(seconds: 1), () {
-                        updateQuestion();
-                        startTimer();
-                      });
+                      } else {
+                        playSound(wrongAnswerSound);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => LostPage(level: widget.level),
+                          ),
+                        );
+                      }
+                      if (score < 100) {
+                        Future.delayed(const Duration(seconds: 1), () {
+                          updateQuestion();
+                          startTimer();
+                        });
+                      }
                     },
                     child: Text(
                       option.toStringAsFixed(

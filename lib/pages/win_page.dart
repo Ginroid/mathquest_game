@@ -1,13 +1,18 @@
 import "package:flutter/material.dart";
+import "package:math_quest_2_application/main.dart";
 import "package:math_quest_2_application/pages/quiz_page.dart";
+import "package:provider/provider.dart";
 
 class WinPage extends StatelessWidget {
   final int level;
 
-  const WinPage({super.key, required this.level});
+  const WinPage({Key? key, required this.level}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    var gameState = Provider.of<GameState>(context, listen: false);
+    gameState.unlockLevel(level + 1);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Congratulations!'),

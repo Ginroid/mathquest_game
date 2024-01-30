@@ -20,6 +20,22 @@ class QuizPage extends StatefulWidget {
 }
 
 class _QuizPageState extends State<QuizPage> {
+  //fixes the issue with timer not counting down after enabling
+  @override
+  void didUpdateWidget(covariant QuizPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isTimerEnabled != widget.isTimerEnabled) {
+      if (widget.isTimerEnabled) {
+        startTimer();
+      } else {
+        timer?.cancel();
+        setState(() {
+          timeLeft = 10; // Reset the time left
+        });
+      }
+    }
+  }
+
   int num1 = 0;
   int num2 = 0;
   String operator = '+';

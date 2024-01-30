@@ -63,14 +63,13 @@ Container signInSignUpButton(
 //function to create the welcome message
 Widget buildWelcomeText() {
   return const Padding(
-    padding: EdgeInsets.only(bottom: 50),
+    padding: EdgeInsets.only(bottom: 20),
     child: Text(
       'Welcome to MathQuest!',
       textAlign: TextAlign.center,
       style: TextStyle(
         color: Colors.white,
         fontSize: 28,
-        fontFamily: 'Open Sans',
         fontWeight: FontWeight.w700,
       ),
     ),

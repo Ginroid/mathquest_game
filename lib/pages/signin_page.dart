@@ -21,9 +21,9 @@ class _SignInPageState extends State<SignInPage> {
         height: MediaQuery.of(context).size.height,
         decoration: BoxDecoration(
             gradient: RadialGradient(colors: [
-          hexStringToColor("CB2B93"),
-          hexStringToColor("9546C4"),
-          hexStringToColor("5E61F4")
+          hexStringToActualColor("CB2B93"),
+          hexStringToActualColor("9546C4"),
+          hexStringToActualColor("5E61F4")
         ], center: const Alignment(0.51, 0.51), radius: 6)),
         child: SingleChildScrollView(
             child: Padding(

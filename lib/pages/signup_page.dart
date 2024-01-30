@@ -29,20 +29,17 @@ class _SignUpPageState extends State<SignUpPage> {
           width: MediaQuery.of(context).size.width,
           height: MediaQuery.of(context).size.height,
           decoration: BoxDecoration(
-              gradient: RadialGradient(colors: [
-            hexStringToColor("CB2B93"),
-            hexStringToColor("9546C4"),
-            hexStringToColor("5E61F4")
-          ], center: const Alignment(0.51, 0.51), radius: 6)),
+              gradient: LinearGradient(colors: [
+            hexStringToActualColor("CB2B93"),
+            hexStringToActualColor("9546C4"),
+            hexStringToActualColor("5E61F4")
+          ], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
           child: SingleChildScrollView(
               child: Padding(
             padding: EdgeInsets.fromLTRB(
                 20, MediaQuery.of(context).size.height * 0.2, 20, 0),
             child: Column(
               children: <Widget>[
-                const SizedBox(
-                  height: 20,
-                ),
                 reusableTextField("Enter User Name", Icons.person_outline,
                     false, _userNameTextController),
                 const SizedBox(

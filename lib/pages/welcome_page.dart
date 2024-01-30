@@ -1,4 +1,6 @@
 import "package:flutter/material.dart";
+import "package:math_quest_2_application/reusables/theme.dart";
+import "package:math_quest_2_application/utils/color_utils.dart";
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -6,56 +8,34 @@ class WelcomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
+      body: Container(
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height,
+        decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [
+          hexStringToActualColor("CB2B93"),
+          hexStringToActualColor("9546C4"),
+          hexStringToActualColor("5E61F4")
+        ], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            const SizedBox(height: 80),
+            const SizedBox(height: 30),
             Image.asset(
               'assets/images/MathQuestLogo202401221154.png',
               height: 400,
             ),
-            const Text(
-              'WELCOME TO MATH QUEST!',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.deepPurple,
-              ),
-            ),
-            const SizedBox(height: 20),
+            buildWelcomeText(),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>[
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.family_restroom, color: Colors.white),
-                  label: const Text(
-                    'PARENT',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/signing');
-                  },
-                  style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all<Color>(
-                      Colors.deepPurple,
-                    ),
-                  ),
-                ),
-                ElevatedButton.icon(
-                  icon:
-                      const Icon(Icons.school, color: Colors.white), // Kid icon
-                  label: const Text('STUDENT',
-                      style: TextStyle(color: Colors.white)),
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/level_selection');
-                  },
-                  style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all<Color>(
-                      Colors.deepPurple,
-                    ),
-                  ),
-                ),
+                buildRoleButton(context, true,
+                    () => Navigator.pushNamed(context, "/signin")),
+                buildRoleButton(
+                    context,
+                    false,
+                    () => Navigator.pushReplacementNamed(
+                        context, "/level_selection"))
               ],
             ),
           ],

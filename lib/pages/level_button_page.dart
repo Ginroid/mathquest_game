@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:math_quest_2_application/utils/color_utils.dart';
 
 class LevelButton extends StatefulWidget {
   final bool unlocked;
@@ -47,7 +48,15 @@ class _LevelButtonState extends State<LevelButton>
         scale: _animation,
         child: Container(
           padding: const EdgeInsets.all(8.0),
-          color: Colors.deepPurple,
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+            colors: [
+              hexStringToActualColor("CB2B93"),
+              hexStringToActualColor("9546C4"),
+              hexStringToActualColor("5E61F4")
+            ],
+            begin: Alignment.topCenter,
+          )),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[

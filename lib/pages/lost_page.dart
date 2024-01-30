@@ -3,8 +3,10 @@ import "package:math_quest_2_application/pages/quiz_page.dart";
 
 class LostPage extends StatelessWidget {
   final int level;
+  final bool isTimerEnabled;
 
-  const LostPage({Key? key, required this.level}) : super(key: key);
+  const LostPage({Key? key, required this.level, required this.isTimerEnabled})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +32,8 @@ class LostPage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => QuizPage(level: level),
+                    builder: (context) =>
+                        QuizPage(level: level, isTimerEnabled: isTimerEnabled),
                   ),
                 );
               },

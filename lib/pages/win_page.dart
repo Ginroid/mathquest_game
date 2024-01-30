@@ -5,8 +5,10 @@ import "package:provider/provider.dart";
 
 class WinPage extends StatelessWidget {
   final int level;
+  final bool isTimerEnabled;
 
-  const WinPage({Key? key, required this.level}) : super(key: key);
+  const WinPage({Key? key, required this.level, required this.isTimerEnabled})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +25,7 @@ class WinPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Padding(
-              padding: const EdgeInsets.only(bottom: 50.0),
+              padding: EdgeInsets.only(bottom: 50.0),
               child: Text(
                 'You have completed Level $level!',
                 style: const TextStyle(fontSize: 32),
@@ -57,7 +59,8 @@ class WinPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => QuizPage(level: level + 1),
+                        builder: (context) => QuizPage(
+                            level: level + 1, isTimerEnabled: isTimerEnabled),
                       ),
                     );
                   },

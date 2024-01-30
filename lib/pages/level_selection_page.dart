@@ -11,36 +11,45 @@ class LevelSelectionPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<GameState>(
       builder: (context, gameState, child) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Select Level'),
-            backgroundColor: Colors.deepPurple,
-          ),
-          body: GridView.builder(
-            padding: const EdgeInsets.all(10.0),
-            itemCount: 10,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 10.0,
-              mainAxisSpacing: 10.0,
-            ),
-            itemBuilder: (BuildContext context, int index) {
-              return LevelButton(
-                unlocked: gameState.unlockedLevels[index],
-                text: 'Level ${index + 1}',
-                onPressed: gameState.unlockedLevels[index]
-                    ? () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => QuizPage(level: index + 1),
-                          ),
-                        );
-                      }
-                    : null,
-              );
-            },
-          ),
+        return Consumer<AppSettings>(
+          // Add this line
+          builder: (context, appSettings, child) {
+            // Update this line
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('Select Level'),
+                backgroundColor: Colors.deepPurple,
+              ),
+              body: GridView.builder(
+                padding: const EdgeInsets.all(10.0),
+                itemCount: 10,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 10.0,
+                  mainAxisSpacing: 10.0,
+                ),
+                itemBuilder: (BuildContext context, int index) {
+                  return LevelButton(
+                    unlocked: gameState.unlockedLevels[index],
+                    text: 'Level ${index + 1}',
+                    onPressed: gameState.unlockedLevels[index]
+                        ? () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => QuizPage(
+                                    level: index + 1,
+                                    isTimerEnabled: appSettings
+                                        .isTimerEnabled), // Update this line
+                              ),
+                            );
+                          }
+                        : null,
+                  );
+                },
+              ),
+            );
+          },
         );
       },
     );

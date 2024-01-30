@@ -3,13 +3,17 @@ import "dart:math";
 
 import "package:audioplayers/audioplayers.dart";
 import "package:flutter/material.dart";
+import "package:math_quest_2_application/main.dart";
 import "package:math_quest_2_application/pages/lost_page.dart";
 import "package:math_quest_2_application/pages/win_page.dart";
+import "package:provider/provider.dart";
 
 class QuizPage extends StatefulWidget {
   final int level;
+  final bool isTimerEnabled;
 
-  const QuizPage({super.key, required this.level});
+  const QuizPage({Key? key, required this.level, required this.isTimerEnabled})
+      : super(key: key);
 
   @override
   State<QuizPage> createState() => _QuizPageState();
@@ -37,16 +41,8 @@ class _QuizPageState extends State<QuizPage> {
   void initState() {
     super.initState();
     updateQuestion();
-    startTimer();
-  }
-
-  int getRangeBasedOnScore() {
-    if (score < 10) {
-      return 10;
-    } else if (score < 20) {
-      return 15;
-    } else {
-      return 20;
+    if (widget.isTimerEnabled) {
+      startTimer();
     }
   }
 
@@ -86,9 +82,21 @@ class _QuizPageState extends State<QuizPage> {
       options = List.from(originalOptions);
       options.shuffle();
       feedback = '';
-      timeLeft = 10;
+      if (widget.isTimerEnabled) {
+        timeLeft = 10;
+      }
       hintUsed = false;
     });
+  }
+
+  int getRangeBasedOnScore() {
+    if (score < 10) {
+      return 10;
+    } else if (score < 20) {
+      return 15;
+    } else {
+      return 20;
+    }
   }
 
   double generateUniqueOption(double correctAnswer) {
@@ -103,17 +111,21 @@ class _QuizPageState extends State<QuizPage> {
 
   void startTimer() {
     timer?.cancel();
-    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (timeLeft == 0) {
-        timer.cancel();
-        updateQuestion();
-        startTimer();
-      } else {
-        setState(() {
-          timeLeft--;
-        });
-      }
-    });
+    if (widget.isTimerEnabled) {
+      timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (timeLeft == 0) {
+          timer.cancel();
+          updateQuestion();
+          if (widget.isTimerEnabled) {
+            startTimer();
+          }
+        } else {
+          setState(() {
+            timeLeft--;
+          });
+        }
+      });
+    }
   }
 
   void showHint() {
@@ -132,132 +144,170 @@ class _QuizPageState extends State<QuizPage> {
     }
   }
 
+  void checkAnswer(double userAnswer) {
+    if (userAnswer == correctAnswer) {
+      playSound(correctAnswerSound);
+      // The user's answer is correct. Update the score.
+      score += 10; // Increase score by 10
+
+      // Check if the user has reached a score of 100
+      if (score >= 100) {
+        // Navigate to the WinPage
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => WinPage(
+                level: widget.level, isTimerEnabled: widget.isTimerEnabled),
+          ),
+        );
+      }
+    } else {
+      playSound(wrongAnswerSound);
+      // The user's answer is incorrect. Navigate to the LostPage.
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => LostPage(
+              level: widget.level, isTimerEnabled: widget.isTimerEnabled),
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel(); // Cancel the timer if it's still running
+    super.dispose();
+  }
+
   Future<void> playSound(String path) async {
     await audioPlayer.play(AssetSource(path));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Math Quest'),
-        centerTitle: true,
-        backgroundColor: Colors.deepPurple,
-        leading: IconButton(
-          icon: const Icon(Icons.home),
-          onPressed: () {
-            Navigator.pushNamed(context, '/');
-          },
-        ),
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.settings),
+    return Consumer<AppSettings>(builder: (context, appSettings, child) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Math Quest'),
+          centerTitle: true,
+          backgroundColor: Colors.deepPurple,
+          leading: IconButton(
+            icon: const Icon(Icons.home),
             onPressed: () {
-              Navigator.pushNamed(context, '/settings');
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text('Warning'),
+                    content: const Text(
+                        'Are you sure you want to exit this level? Your progress will be lost.'),
+                    actions: <Widget>[
+                      TextButton(
+                        child: const Text('No'),
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Close the dialog
+                        },
+                      ),
+                      TextButton(
+                        child: const Text('Yes'),
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Close the dialog
+                          Navigator.of(context)
+                              .pop(); // Go back to the previous screen
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.lightbulb_outline),
-            onPressed: showHint,
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'Score: $score',
-              style: const TextStyle(fontSize: 30),
+          actions: <Widget>[
+            IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: () {
+                Navigator.pushNamed(context, '/settings');
+              },
             ),
-            Text(
-              'Level: ${widget.level}',
-              style: const TextStyle(fontSize: 30),
+            IconButton(
+              icon: const Icon(Icons.lightbulb_outline),
+              onPressed: showHint,
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                const Icon(
-                  Icons.timer,
-                  size: 30,
-                ),
-                Text(
-                  'Time left: $timeLeft',
-                  style: const TextStyle(fontSize: 30),
-                ),
-              ],
-            ),
-            Text(
-              feedback,
-              style: TextStyle(fontSize: 30, color: feedbackColor),
-            ),
-            Text(
-              '$num1 $operator $num2 = ?',
-              style: const TextStyle(fontSize: 30),
-            ),
-            ...(options.map((option) => Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ElevatedButton(
-                    style: ButtonStyle(
-                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                      padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
-                        const EdgeInsets.symmetric(
-                            horizontal: 50, vertical: 25),
-                      ),
-                      backgroundColor: MaterialStateProperty.all<Color>(
-                        Colors.deepPurple,
-                      ),
-                    ),
-                    onPressed: () async {
-                      bool isCorrect = option == correctAnswer;
-
-                      await playSound(
-                          isCorrect ? correctAnswerSound : wrongAnswerSound);
-                      if (isCorrect) {
-                        setState(() {
-                          feedback = 'Correct!';
-                          feedbackColor = Colors.green;
-                          score += 10;
-                        });
-                        if (score == 100) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  WinPage(level: widget.level),
-                            ),
-                          );
-                        }
-                      } else {
-                        playSound(wrongAnswerSound);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => LostPage(level: widget.level),
-                          ),
-                        );
-                      }
-                      if (score < 100) {
-                        Future.delayed(const Duration(seconds: 1), () {
-                          updateQuestion();
-                          startTimer();
-                        });
-                      }
-                    },
-                    child: Text(
-                      option.toStringAsFixed(
-                          option.truncateToDouble() == option ? 0 : 2),
-                      style: const TextStyle(fontSize: 22),
-                    ),
-                  ),
-                ))),
           ],
         ),
-      ),
-    );
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                'Score: $score',
+                style: const TextStyle(fontSize: 30),
+              ),
+              Text(
+                'Level: ${widget.level}',
+                style: const TextStyle(fontSize: 30),
+              ),
+              if (appSettings.isTimerEnabled)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    const Icon(
+                      Icons.timer,
+                      size: 30,
+                    ),
+                    Text(
+                      'Time left: $timeLeft',
+                      style: const TextStyle(fontSize: 30),
+                    ),
+                  ],
+                ),
+              Text(
+                feedback,
+                style: TextStyle(fontSize: 30, color: feedbackColor),
+              ),
+              Text(
+                '$num1 $operator $num2 = ?',
+                style: const TextStyle(fontSize: 30),
+              ),
+              ...(options.map((option) => Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                        shape:
+                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
+                          const EdgeInsets.symmetric(
+                              horizontal: 50, vertical: 25),
+                        ),
+                        backgroundColor: MaterialStateProperty.all<Color>(
+                          Colors.deepPurple,
+                        ),
+                      ),
+                      onPressed: () {
+                        checkAnswer(option);
+                        Future.delayed(const Duration(seconds: 1), () {
+                          updateQuestion();
+                          if (appSettings.isTimerEnabled) {
+                            startTimer();
+                          }
+                        });
+                      },
+                      child: Text(
+                        option.toStringAsFixed(
+                            option.truncateToDouble() == option ? 0 : 2),
+                        style: const TextStyle(fontSize: 22),
+                      ),
+                    ),
+                  ))),
+            ],
+          ),
+        ),
+      );
+    });
   }
 }

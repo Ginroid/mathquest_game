@@ -6,6 +6,8 @@ import "package:flutter/material.dart";
 import "package:math_quest_2_application/main.dart";
 import "package:math_quest_2_application/pages/lost_page.dart";
 import "package:math_quest_2_application/pages/win_page.dart";
+import "package:math_quest_2_application/reusables/theme.dart";
+import "package:math_quest_2_application/utils/color_utils.dart";
 import "package:provider/provider.dart";
 
 class QuizPage extends StatefulWidget {
@@ -204,123 +206,93 @@ class _QuizPageState extends State<QuizPage> {
   Widget build(BuildContext context) {
     return Consumer<AppSettings>(builder: (context, appSettings, child) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Math Quest'),
-          centerTitle: true,
-          backgroundColor: Colors.deepPurple,
-          leading: IconButton(
-            icon: const Icon(Icons.home),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: const Text('Warning'),
-                    content: const Text(
-                        'Are you sure you want to exit this level? Your progress will be lost.'),
-                    actions: <Widget>[
-                      TextButton(
-                        child: const Text('No'),
-                        onPressed: () {
-                          Navigator.of(context).pop(); // Close the dialog
-                        },
-                      ),
-                      TextButton(
-                        child: const Text('Yes'),
-                        onPressed: () {
-                          Navigator.of(context).pop(); // Close the dialog
-                          Navigator.of(context)
-                              .pop(); // Go back to the previous screen
-                        },
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-          ),
-          actions: <Widget>[
-            IconButton(
-              icon: const Icon(Icons.settings),
-              onPressed: () {
-                Navigator.pushNamed(context, '/settings');
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.lightbulb_outline),
-              onPressed: showHint,
-            ),
-          ],
+        appBar: CustomAppBar(
+          title: 'Level ${widget.level}',
+          showHomeButton: true,
+          showHintButton: true,
+          onHintPressed: showHint,
+          onHomePressed: () =>
+              Navigator.pushReplacementNamed(context, '/level_selection'),
         ),
         body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                'Score: $score',
-                style: const TextStyle(fontSize: 30),
-              ),
-              Text(
-                'Level: ${widget.level}',
-                style: const TextStyle(fontSize: 30),
-              ),
-              if (appSettings.isTimerEnabled)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    const Icon(
-                      Icons.timer,
-                      size: 30,
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  // Score Text
+                  Text(
+                    'Score: $score',
+                    style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                        color: hexStringToActualColor("4E899A")),
+                  ),
+
+                  // Timer and Question Text
+                  if (appSettings.isTimerEnabled)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.timer,
+                            size: 30, color: hexStringToActualColor("4E899A")),
+                        const SizedBox(
+                            width: 8), // Spacing between icon and text
+                        Text(
+                          'Time left: $timeLeft',
+                          style: TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold,
+                              color: hexStringToActualColor("4E899A")),
+                        ),
+                      ],
                     ),
-                    Text(
-                      'Time left: $timeLeft',
-                      style: const TextStyle(fontSize: 30),
-                    ),
-                  ],
-                ),
-              Text(
-                feedback,
-                style: TextStyle(fontSize: 30, color: feedbackColor),
-              ),
-              Text(
-                '$num1 $operator $num2 = ?',
-                style: const TextStyle(fontSize: 30),
-              ),
-              ...(options.map((option) => Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ElevatedButton(
-                      style: ButtonStyle(
-                        shape:
-                            MaterialStateProperty.all<RoundedRectangleBorder>(
-                          RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                  const SizedBox(height: 20), // Spacing between elements
+                  Text(
+                    '$num1 $operator $num2 = ?',
+                    style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                        color: hexStringToActualColor("4E899A")),
+                  ),
+                  const SizedBox(height: 20), // Spacing between elements
+
+                  // Option Buttons
+                  ...(options.map((option) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            primary: hexStringToActualColor(
+                                "E4BD1F"), // Button background color
+                            onPrimary: Colors.white, // Text color
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(30), // Rounded corners
+                            ),
+                            fixedSize:
+                                const Size(200, 50), // Fixed size of the button
+                            elevation: 5, // Slight elevation for a tactile feel
+                          ),
+                          onPressed: () {
+                            checkAnswer(option);
+                            Future.delayed(const Duration(seconds: 1), () {
+                              updateQuestion();
+                              if (appSettings.isTimerEnabled) {
+                                startTimer();
+                              }
+                            });
+                          },
+                          child: Text(
+                            option.toStringAsFixed(
+                                option.truncateToDouble() == option ? 0 : 2),
+                            style: const TextStyle(fontSize: 22),
                           ),
                         ),
-                        padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
-                          const EdgeInsets.symmetric(
-                              horizontal: 50, vertical: 25),
-                        ),
-                        backgroundColor: MaterialStateProperty.all<Color>(
-                          Colors.deepPurple,
-                        ),
-                      ),
-                      onPressed: () {
-                        checkAnswer(option);
-                        Future.delayed(const Duration(seconds: 1), () {
-                          updateQuestion();
-                          if (appSettings.isTimerEnabled) {
-                            startTimer();
-                          }
-                        });
-                      },
-                      child: Text(
-                        option.toStringAsFixed(
-                            option.truncateToDouble() == option ? 0 : 2),
-                        style: const TextStyle(fontSize: 22),
-                      ),
-                    ),
-                  ))),
-            ],
+                      ))),
+                ],
+              ),
+            ),
           ),
         ),
       );

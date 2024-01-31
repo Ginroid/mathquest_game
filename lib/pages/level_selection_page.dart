@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:math_quest_2_application/main.dart";
 import "package:math_quest_2_application/pages/level_button_page.dart";
 import "package:math_quest_2_application/pages/quiz_page.dart";
+import "package:math_quest_2_application/reusables/theme.dart";
 import "package:provider/provider.dart";
 
 class LevelSelectionPage extends StatelessWidget {
@@ -12,13 +13,12 @@ class LevelSelectionPage extends StatelessWidget {
     return Consumer<GameState>(
       builder: (context, gameState, child) {
         return Consumer<AppSettings>(
-          // Add this line
           builder: (context, appSettings, child) {
-            // Update this line
             return Scaffold(
-              appBar: AppBar(
-                title: const Text('Select Level'),
-                backgroundColor: Colors.deepPurple,
+              appBar: const CustomAppBar(
+                title: 'Select Level',
+                showHomeButton: false,
+                showHintButton: false,
               ),
               body: GridView.builder(
                 padding: const EdgeInsets.all(10.0),
@@ -39,8 +39,7 @@ class LevelSelectionPage extends StatelessWidget {
                               MaterialPageRoute(
                                 builder: (context) => QuizPage(
                                     level: index + 1,
-                                    isTimerEnabled: appSettings
-                                        .isTimerEnabled), // Update this line
+                                    isTimerEnabled: appSettings.isTimerEnabled),
                               ),
                             );
                           }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:math_quest_2_application/utils/color_utils.dart';
 
-var defaultTextStyle = const TextStyle(
-    color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 28);
+var mainText =
+    const TextStyle(color: Colors.white, fontWeight: FontWeight.bold);
 
 TextField reusableTextField(String text, IconData icon, bool isPasswordType,
     TextEditingController controller) {
@@ -9,7 +10,7 @@ TextField reusableTextField(String text, IconData icon, bool isPasswordType,
     controller: controller,
     //hide textField if it's a password
     obscureText: isPasswordType,
-    //if its a password autocorrect is disabled
+    //if its a password autoCorrect is disabled
     autocorrect: !isPasswordType,
     cursorColor: Colors.white,
     //color of the text when entered
@@ -105,4 +106,84 @@ Widget buildRoleButton(BuildContext context, bool isParent, Function onTap) {
                 fontWeight: FontWeight.bold,
                 fontSize: 16)),
       ));
+}
+
+class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final String title;
+  final bool showHomeButton;
+  final bool showHintButton;
+  final VoidCallback? onHomePressed;
+  final VoidCallback? onHintPressed;
+
+  const CustomAppBar({
+    Key? key,
+    required this.title,
+    this.showHomeButton = false,
+    this.showHintButton = false,
+    this.onHomePressed,
+    this.onHintPressed,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      title: Text(
+        title,
+        style:
+            const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      ),
+      backgroundColor: hexStringToActualColor("4E899A"),
+      centerTitle: true,
+      leading: showHomeButton
+          ? IconButton(
+              icon: const Icon(Icons.home, color: Colors.white),
+              onPressed: () => _showExitDialog(context),
+            )
+          : null,
+      actions: <Widget>[
+        if (showHintButton)
+          IconButton(
+            icon: const Icon(Icons.lightbulb_outline, color: Colors.white),
+            onPressed: onHintPressed,
+          ),
+        IconButton(
+          icon: const Icon(Icons.settings, color: Colors.white),
+          onPressed: () => Navigator.pushNamed(context, '/settings'),
+        ),
+      ],
+    );
+  }
+
+  void _showExitDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Warning'),
+          content: const Text(
+              'Are you sure you want to exit this level? Your progress will be lost.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('No'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('Yes'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                if (onHomePressed != null) {
+                  onHomePressed!();
+                } else {
+                  Navigator.of(context).pop(); // Go back to the previous screen
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

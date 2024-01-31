@@ -25,7 +25,7 @@ class WinPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Padding(
-              padding: EdgeInsets.only(bottom: 50.0),
+              padding: const EdgeInsets.only(bottom: 50.0),
               child: Text(
                 'You have completed Level $level!',
                 style: const TextStyle(fontSize: 32),

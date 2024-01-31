@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import 'package:math_quest_2_application/main.dart';
+import 'package:math_quest_2_application/reusables/theme.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -43,9 +44,10 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: Colors.deepPurple,
+      appBar: const CustomAppBar(
+        title: 'Settings',
+        showHomeButton: false,
+        showHintButton: false,
       ),
       body: Center(
         child: Column(
@@ -53,7 +55,6 @@ class _SettingsPageState extends State<SettingsPage> {
           children: <Widget>[
             const Text(
               'Volume',
-              style: TextStyle(fontSize: 24),
             ),
             Slider(
               value: volume,
@@ -74,7 +75,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 Column(
                   children: <Widget>[
                     const Text(
-                      'Mute',
+                      'Sound Effects',
                       style: TextStyle(fontSize: 24),
                     ),
                     Switch(

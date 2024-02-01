@@ -9,3 +9,12 @@ Color hexStringToActualColor(String hex) {
   int val = int.parse(hex, radix: 16);
   return Color(val);
 }
+
+//contains a logic error, but I liked the color so I kept it
+hexStringToColor(String hexColor) {
+  hexColor = hexColor.toUpperCase().replaceAll("#", "");
+  if (hexColor.length == 6) {
+    hexColor += "FF";
+  }
+  return Color(int.parse(hexColor, radix: 16));
+}

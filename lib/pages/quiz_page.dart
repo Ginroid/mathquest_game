@@ -4,8 +4,6 @@ import "dart:math";
 import "package:audioplayers/audioplayers.dart";
 import "package:flutter/material.dart";
 import "package:math_quest_2_application/main.dart";
-import "package:math_quest_2_application/pages/lost_page.dart";
-import "package:math_quest_2_application/pages/win_page.dart";
 import "package:math_quest_2_application/reusables/theme.dart";
 import "package:math_quest_2_application/utils/color_utils.dart";
 import "package:provider/provider.dart";
@@ -13,8 +11,13 @@ import "package:provider/provider.dart";
 class QuizPage extends StatefulWidget {
   final int level;
   final bool isTimerEnabled;
+  final String operation;
 
-  const QuizPage({Key? key, required this.level, required this.isTimerEnabled})
+  const QuizPage(
+      {Key? key,
+      required this.level,
+      required this.isTimerEnabled,
+      required this.operation})
       : super(key: key);
 
   @override
@@ -50,6 +53,9 @@ class _QuizPageState extends State<QuizPage> {
   int timeLeft = 10;
   Timer? timer;
   bool hintUsed = false;
+  int totalQuestionsAsked = 0;
+  int correctAnswers = 0;
+  int wrongAnswers = 0;
 
   AudioPlayer audioPlayer = AudioPlayer();
   final correctAnswerSound = 'sounds/correct_answer.mp3';
@@ -58,6 +64,9 @@ class _QuizPageState extends State<QuizPage> {
   @override
   void initState() {
     super.initState();
+    totalQuestionsAsked = 0;
+    correctAnswers = 0;
+    wrongAnswers = 0;
     updateQuestion();
     if (widget.isTimerEnabled) {
       startTimer();
@@ -65,46 +74,56 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   void updateQuestion() {
-    setState(() {
-      int range = getRangeBasedOnScore();
-      num1 = Random().nextInt(range);
-      num2 = Random().nextInt(range);
-      List<String> operators = ['+', '-', '×', '÷'];
-      operator = (operators..shuffle()).first;
-      switch (operator) {
-        case '+':
-          correctAnswer = (num1 + num2).toDouble();
-          break;
-        case '-':
-          correctAnswer = (num1 - num2).toDouble();
-          break;
-        case '×':
-          correctAnswer = (num1 * num2).toDouble();
-          break;
-        case '÷':
-          if (num2 != 0 && num1 % num2 == 0) {
+    if (totalQuestionsAsked < 20) {
+      setState(() {
+        int range = getRangeBasedOnScore();
+        num1 = Random().nextInt(range);
+        num2 = Random().nextInt(range);
+
+        switch (widget.operation) {
+          case 'Addition':
+            correctAnswer = (num1 + num2).toDouble();
+            operator = '+';
+            break;
+          case 'Subtraction':
+            correctAnswer = (num1 - num2).toDouble();
+            operator = '-';
+            break;
+          case 'Multiplication':
+            correctAnswer = (num1 * num2).toDouble();
+            operator = '×';
+            break;
+          case 'Division':
+            // Ensure num2 is not zero and division is integer
+            while (num2 == 0 || num1 % num2 != 0) {
+              num1 = Random().nextInt(range);
+              num2 = Random().nextInt(range) + 1; // Adding 1 to avoid zero
+            }
             correctAnswer = num1 / num2;
             correctAnswer = double.parse(correctAnswer.toStringAsFixed(2));
-          } else {
-            updateQuestion();
-            return;
-          }
-          break;
-      }
-      originalOptions = [
-        correctAnswer,
-        generateUniqueOption(correctAnswer),
-        generateUniqueOption(correctAnswer),
-        generateUniqueOption(correctAnswer)
-      ];
-      options = List.from(originalOptions);
-      options.shuffle();
-      feedback = '';
-      if (widget.isTimerEnabled) {
-        timeLeft = 10;
-      }
-      hintUsed = false;
-    });
+            operator = '÷';
+            break;
+          default:
+            throw Exception('Unsupported operation');
+        }
+
+        originalOptions = [
+          correctAnswer,
+          generateUniqueOption(correctAnswer),
+          generateUniqueOption(correctAnswer),
+          generateUniqueOption(correctAnswer)
+        ];
+        options = List.from(originalOptions);
+        options.shuffle();
+        feedback = '';
+        if (widget.isTimerEnabled) {
+          timeLeft = 10;
+        }
+        hintUsed = false;
+      });
+    } else {
+      showResultsDialog();
+    }
   }
 
   int getRangeBasedOnScore() {
@@ -117,6 +136,7 @@ class _QuizPageState extends State<QuizPage> {
     }
   }
 
+  //*sometimes its not unique
   double generateUniqueOption(double correctAnswer) {
     double option;
     do {
@@ -133,10 +153,23 @@ class _QuizPageState extends State<QuizPage> {
       timer = Timer.periodic(const Duration(seconds: 1), (timer) {
         if (timeLeft == 0) {
           timer.cancel();
-          updateQuestion();
-          if (widget.isTimerEnabled) {
-            startTimer();
-          }
+          setState(() {
+            feedback = 'Time\'s up!';
+            feedbackColor = Colors.red;
+            timeLeft = 10; // Reset time for next question
+            totalQuestionsAsked++;
+          });
+
+          Future.delayed(const Duration(seconds: 1), () {
+            setState(() {
+              feedback = ''; // Clear feedback
+              if (totalQuestionsAsked < 20) {
+                updateQuestion();
+              } else {
+                showResultsDialog();
+              }
+            });
+          });
         } else {
           setState(() {
             timeLeft--;
@@ -162,34 +195,114 @@ class _QuizPageState extends State<QuizPage> {
     }
   }
 
-  void checkAnswer(double userAnswer) {
-    if (userAnswer == correctAnswer) {
-      playSound(correctAnswerSound);
-      // The user's answer is correct. Update the score.
-      score += 10; // Increase score by 10
+  void checkAnswer(double userAnswer) async {
+    bool isCorrect = userAnswer == correctAnswer;
 
-      // Check if the user has reached a score of 100
-      if (score >= 100) {
-        // Navigate to the WinPage
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => WinPage(
-                level: widget.level, isTimerEnabled: widget.isTimerEnabled),
-          ),
-        );
+    setState(() {
+      feedback = isCorrect ? 'Correct!' : 'Wrong!';
+      feedbackColor = isCorrect ? Colors.green : Colors.red;
+      if (isCorrect) {
+        correctAnswers++;
+        score += 10;
+      } else {
+        wrongAnswers++;
       }
-    } else {
-      playSound(wrongAnswerSound);
-      // The user's answer is incorrect. Navigate to the LostPage.
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => LostPage(
-              level: widget.level, isTimerEnabled: widget.isTimerEnabled),
+    });
+
+    // Wait for sound to play
+    await playSound(isCorrect ? correctAnswerSound : wrongAnswerSound);
+
+    // Delay for feedback visibility
+    await Future.delayed(const Duration(seconds: 1));
+
+    // Update for next question or results dialog
+    setState(() {
+      feedback = ''; // Clear feedback
+      totalQuestionsAsked++;
+      if (totalQuestionsAsked < 20) {
+        updateQuestion();
+      } else {
+        showResultsDialog();
+      }
+    });
+  }
+
+  Future<void> playSound(String path) async {
+    await audioPlayer.play(AssetSource(path));
+  }
+
+  void showResultsDialog() {
+    bool isLevelPassed = score >= 100;
+    bool canProceedToNextLevel = isLevelPassed && widget.level < 10;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(isLevelPassed ? 'Congratulations!' : 'Try Again!'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Correct Answers: $correctAnswers'),
+                Text('Wrong Answers: $wrongAnswers'),
+                Text('Total Score: $score'),
+                if (canProceedToNextLevel)
+                  const Text('\nDo you want to proceed to the next level?'),
+              ],
+            ),
+          ),
+          actions: isLevelPassed
+              ? <Widget>[
+                  TextButton(
+                    child: const Text('No'),
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Close the dialog
+                      saveProgress(widget.level + 1);
+                      Navigator.pushReplacementNamed(
+                          context, '/level_selection');
+                    },
+                  ),
+                  TextButton(
+                    child: const Text('Yes'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      navigateToNextLevel();
+                    },
+                  ),
+                ]
+              : <Widget>[
+                  TextButton(
+                    child: const Text('Ok'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.pushReplacementNamed(
+                          context, '/level_selection');
+                    },
+                  ),
+                ],
+        );
+      },
+    );
+  }
+
+  void saveProgress(int level) async {
+    var gameState = Provider.of<GameState>(context, listen: false);
+    gameState.unlockLevel(widget.operation, level);
+  }
+
+  void navigateToNextLevel() {
+    saveProgress(widget.level + 1); // Save progress before navigating
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QuizPage(
+          level: widget.level + 1,
+          isTimerEnabled: widget.isTimerEnabled,
+          operation: widget.operation,
         ),
-      );
-    }
+      ),
+    );
   }
 
   @override
@@ -198,16 +311,12 @@ class _QuizPageState extends State<QuizPage> {
     super.dispose();
   }
 
-  Future<void> playSound(String path) async {
-    await audioPlayer.play(AssetSource(path));
-  }
-
   @override
   Widget build(BuildContext context) {
     return Consumer<AppSettings>(builder: (context, appSettings, child) {
       return Scaffold(
         appBar: CustomAppBar(
-          title: 'Level ${widget.level}',
+          title: '${widget.operation}: Level ${widget.level}',
           showHomeButton: true,
           showHintButton: true,
           onHintPressed: showHint,
@@ -229,6 +338,14 @@ class _QuizPageState extends State<QuizPage> {
                         fontWeight: FontWeight.bold,
                         color: hexStringToActualColor("4E899A")),
                   ),
+                  if (feedback.isNotEmpty)
+                    Text(
+                      feedback,
+                      style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: feedbackColor),
+                    ),
 
                   // Timer and Question Text
                   if (appSettings.isTimerEnabled)
@@ -248,7 +365,7 @@ class _QuizPageState extends State<QuizPage> {
                         ),
                       ],
                     ),
-                  const SizedBox(height: 20), // Spacing between elements
+                  const SizedBox(height: 20),
                   Text(
                     '$num1 $operator $num2 = ?',
                     style: TextStyle(
@@ -256,23 +373,21 @@ class _QuizPageState extends State<QuizPage> {
                         fontWeight: FontWeight.bold,
                         color: hexStringToActualColor("4E899A")),
                   ),
-                  const SizedBox(height: 20), // Spacing between elements
+                  const SizedBox(height: 20),
 
                   // Option Buttons
                   ...(options.map((option) => Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            primary: hexStringToActualColor(
-                                "E4BD1F"), // Button background color
-                            onPrimary: Colors.white, // Text color
+                            foregroundColor: Colors.white,
+                            backgroundColor:
+                                hexStringToActualColor("E4BD1F"), // Text color
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(30), // Rounded corners
+                              borderRadius: BorderRadius.circular(30),
                             ),
-                            fixedSize:
-                                const Size(200, 50), // Fixed size of the button
-                            elevation: 5, // Slight elevation for a tactile feel
+                            fixedSize: const Size(200, 50),
+                            elevation: 5,
                           ),
                           onPressed: () {
                             checkAnswer(option);

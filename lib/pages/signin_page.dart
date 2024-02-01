@@ -20,11 +20,11 @@ class _SignInPageState extends State<SignInPage> {
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,
         decoration: BoxDecoration(
-            gradient: RadialGradient(colors: [
-          hexStringToActualColor("CB2B93"),
-          hexStringToActualColor("9546C4"),
-          hexStringToActualColor("5E61F4")
-        ], center: const Alignment(0.51, 0.51), radius: 6)),
+            gradient: LinearGradient(colors: [
+          hexStringToActualColor("4E899A"),
+          hexStringToActualColor("E4BD1F"),
+          //6b7fd2
+        ], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
         child: SingleChildScrollView(
             child: Padding(
           padding: EdgeInsets.fromLTRB(

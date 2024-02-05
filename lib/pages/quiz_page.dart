@@ -4,6 +4,7 @@ import "dart:math";
 import "package:audioplayers/audioplayers.dart";
 import "package:flutter/material.dart";
 import "package:math_quest_2_application/main.dart";
+import "package:math_quest_2_application/pages/level_selection_page.dart";
 import "package:math_quest_2_application/reusables/theme.dart";
 import "package:math_quest_2_application/utils/color_utils.dart";
 import "package:math_quest_2_application/utils/performance_data_service.dart";
@@ -235,19 +236,58 @@ class _QuizPageState extends State<QuizPage> {
     );
 
     // Prepare for next question or show results
-    setState(() {
-      feedback = ''; // Clear feedback
-      totalQuestionsAsked++;
-      if (totalQuestionsAsked < 20) {
+    if (totalQuestionsAsked < 19) {
+      // Change here to check for less than 19
+      setState(() {
+        feedback = ''; // Clear feedback
+        totalQuestionsAsked++;
         updateQuestion();
-      } else {
+      });
+    } else {
+      setState(() {
+        feedback = ''; // Clear feedback
+        // Do not increment totalQuestionsAsked here
         showResultsDialog();
-      }
-    });
+      });
+    }
   }
 
   Future<void> playSound(String path) async {
-    await audioPlayer.play(AssetSource(path));
+    var appSettings = Provider.of<AppSettings>(context, listen: false);
+    if (appSettings.soundEffectsEnabled) {
+      await audioPlayer.play(AssetSource(path));
+    }
+  }
+
+  void _showExitDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Warning'),
+          content: const Text(
+              'Are you sure you want to exit this level? Your progress will be lost.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('No'),
+              onPressed: () => Navigator.of(context).pop(), // Closes the dialog
+            ),
+            TextButton(
+              child: const Text('Yes'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Closes the dialog
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const LevelSelectionPage()),
+                  (Route<dynamic> route) => false,
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void showResultsDialog() {
@@ -287,8 +327,12 @@ class _QuizPageState extends State<QuizPage> {
                     onPressed: () {
                       Navigator.of(context).pop(); // Close the dialog
                       saveProgress(widget.level + 1);
-                      Navigator.pushReplacementNamed(
-                          context, '/level_selection');
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const LevelSelectionPage()),
+                        (Route<dynamic> route) => false,
+                      );
                     },
                   ),
                   TextButton(
@@ -303,9 +347,13 @@ class _QuizPageState extends State<QuizPage> {
                   TextButton(
                     child: const Text('Ok'),
                     onPressed: () {
-                      Navigator.of(context).pop();
-                      Navigator.pushReplacementNamed(
-                          context, '/level_selection');
+                      Navigator.of(context).pop(); // Close the dialog
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const LevelSelectionPage()),
+                        (Route<dynamic> route) => false,
+                      );
                     },
                   ),
                 ],
@@ -343,102 +391,115 @@ class _QuizPageState extends State<QuizPage> {
   Widget build(BuildContext context) {
     return Consumer<AppSettings>(builder: (context, appSettings, child) {
       return Scaffold(
-        appBar: CustomAppBar(
-          title: '${widget.operation}: Level ${widget.level}',
-          showHomeButton: true,
-          showHintButton: appSettings.isHintEnabled,
-          onHintPressed: showHint,
-          onHomePressed: () =>
-              Navigator.pushReplacementNamed(context, '/level_selection'),
-        ),
-        body: Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: <Widget>[
-                  // Score Text
-                  Text(
-                    'Score: $score',
-                    style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: hexStringToActualColor("4E899A")),
-                  ),
-                  if (feedback.isNotEmpty)
-                    Text(
-                      feedback,
-                      style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: feedbackColor),
-                    ),
-
-                  // Timer and Question Text
-                  if (appSettings.isTimerEnabled)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.timer,
-                            size: 30, color: hexStringToActualColor("4E899A")),
-                        const SizedBox(
-                            width: 8), // Spacing between icon and text
+          appBar: CustomAppBar(
+            title: '${widget.operation}: Level ${widget.level}',
+            showHomeButton: true,
+            showHintButton: appSettings.isHintEnabled,
+            onHintPressed: showHint,
+            onHomePressed: _showExitDialog,
+          ),
+          body: Container(
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+            child: Center(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      // Current Question Number Display
+                      Text(
+                        'Question: ${totalQuestionsAsked + 1}/20',
+                        style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: hexStringToActualColor("4E899A")),
+                      ),
+                      // Score Text
+                      Text(
+                        'Score: $score',
+                        style: TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.bold,
+                            color: hexStringToActualColor("4E899A")),
+                      ),
+                      if (feedback.isNotEmpty)
                         Text(
-                          'Time left: $timeLeft',
+                          feedback,
                           style: TextStyle(
-                              fontSize: 30,
+                              fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: hexStringToActualColor("4E899A")),
+                              color: feedbackColor),
                         ),
-                      ],
-                    ),
-                  const SizedBox(height: 20),
-                  Text(
-                    '$num1 $operator $num2 = ?',
-                    style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: hexStringToActualColor("4E899A")),
-                  ),
-                  const SizedBox(height: 20),
 
-                  // Option Buttons
-                  ...(options.map((option) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            backgroundColor:
-                                hexStringToActualColor("E4BD1F"), // Text color
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                      // Timer and Question Text
+                      if (appSettings.isTimerEnabled)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.timer,
+                                size: 30,
+                                color: hexStringToActualColor("4E899A")),
+                            const SizedBox(
+                                width: 8), // Spacing between icon and text
+                            Text(
+                              'Time left: $timeLeft',
+                              style: TextStyle(
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.bold,
+                                  color: hexStringToActualColor("4E899A")),
                             ),
-                            fixedSize: const Size(200, 50),
-                            elevation: 5,
-                          ),
-                          onPressed: () {
-                            checkAnswer(option);
-                            Future.delayed(const Duration(seconds: 1), () {
-                              updateQuestion();
-                              if (appSettings.isTimerEnabled) {
-                                startTimer();
-                              }
-                            });
-                          },
-                          child: Text(
-                            option.toStringAsFixed(
-                                option.truncateToDouble() == option ? 0 : 2),
-                            style: const TextStyle(fontSize: 22),
-                          ),
+                          ],
                         ),
-                      ))),
-                ],
+                      const SizedBox(height: 20),
+                      Text(
+                        '$num1 $operator $num2 = ?',
+                        style: TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.bold,
+                            color: hexStringToActualColor("4E899A")),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Option Buttons
+                      ...(options.map((option) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                backgroundColor: hexStringToActualColor(
+                                    "E4BD1F"), // Text color
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                fixedSize: const Size(200, 50),
+                                elevation: 5,
+                              ),
+                              onPressed: () {
+                                checkAnswer(option);
+                                Future.delayed(const Duration(seconds: 1), () {
+                                  updateQuestion();
+                                  if (appSettings.isTimerEnabled) {
+                                    startTimer();
+                                  }
+                                });
+                              },
+                              child: Text(
+                                option.toStringAsFixed(
+                                    option.truncateToDouble() == option
+                                        ? 0
+                                        : 2),
+                                style: const TextStyle(fontSize: 22),
+                              ),
+                            ),
+                          ))),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-      );
+          ));
     });
   }
 }

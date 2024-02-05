@@ -111,7 +111,9 @@ Widget buildRoleButton(BuildContext context, bool isParent, Function onTap) {
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final bool showHomeButton;
+  final bool showBackButton; // New parameter for back button
   final bool showHintButton;
+  final bool showSettingsButton;
   final VoidCallback? onHomePressed;
   final VoidCallback? onHintPressed;
 
@@ -119,7 +121,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     Key? key,
     required this.title,
     this.showHomeButton = false,
+    this.showBackButton = false, // Default to false
     this.showHintButton = false,
+    this.showSettingsButton = true,
     this.onHomePressed,
     this.onHintPressed,
   }) : super(key: key);
@@ -134,53 +138,26 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       backgroundColor: hexStringToActualColor("4E899A"),
       centerTitle: true,
-      leading: showHomeButton
-          ? IconButton(
-              icon: const Icon(Icons.home, color: Colors.white),
-              onPressed: () => _showExitDialog(context),
-            )
-          : null,
+      leading: showBackButton
+          ? BackButton(color: Colors.white) // White back button
+          : (showHomeButton
+              ? IconButton(
+                  icon: const Icon(Icons.home, color: Colors.white),
+                  onPressed: onHomePressed,
+                )
+              : null),
       actions: <Widget>[
         if (showHintButton)
           IconButton(
             icon: const Icon(Icons.lightbulb_outline, color: Colors.white),
             onPressed: onHintPressed,
           ),
-        IconButton(
-          icon: const Icon(Icons.settings, color: Colors.white),
-          onPressed: () => Navigator.pushNamed(context, '/settings'),
-        ),
+        if (showSettingsButton)
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            onPressed: () => Navigator.pushNamed(context, '/settings'),
+          ),
       ],
-    );
-  }
-
-  void _showExitDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Warning'),
-          content: const Text(
-              'Are you sure you want to exit this level? Your progress will be lost.'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('No'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            TextButton(
-              child: const Text('Yes'),
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-                if (onHomePressed != null) {
-                  onHomePressed!();
-                } else {
-                  Navigator.of(context).pop(); // Go back to the previous screen
-                }
-              },
-            ),
-          ],
-        );
-      },
     );
   }
 

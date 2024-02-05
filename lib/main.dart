@@ -70,6 +70,7 @@ class GameState extends ChangeNotifier {
 class AppSettings extends ChangeNotifier {
   bool _isTimerEnabled = true;
   bool _isHintEnabled = true;
+  bool _soundEffectsEnabled = true;
 
   AppSettings() {
     _loadSettings();
@@ -89,16 +90,26 @@ class AppSettings extends ChangeNotifier {
     _saveSettings();
   }
 
+  bool get soundEffectsEnabled => _soundEffectsEnabled;
+
+  set soundEffectsEnabled(bool newValue) {
+    _soundEffectsEnabled = newValue;
+    notifyListeners();
+    _saveSettings();
+  }
+
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     _isTimerEnabled = prefs.getBool('isTimerEnabled') ?? true;
     _isHintEnabled = prefs.getBool('isHintEnabled') ?? true;
+    _soundEffectsEnabled = prefs.getBool('soundEffectsEnabled') ?? true; // New
   }
 
   Future<void> _saveSettings() async {
     final prefs = await SharedPreferences.getInstance();
     prefs.setBool('isTimerEnabled', _isTimerEnabled);
-    prefs.setBool('isHintEnabled', _isHintEnabled); // Save hint setting
+    prefs.setBool('isHintEnabled', _isHintEnabled);
+    prefs.setBool('soundEffectsEnabled', _soundEffectsEnabled); // New
   }
 }
 

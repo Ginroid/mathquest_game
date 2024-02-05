@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:math_quest_2_application/pages/performance_card_page.dart';
 import 'package:math_quest_2_application/pages/signin_page.dart';
 import 'package:math_quest_2_application/pages/level_selection_page.dart';
 import 'package:math_quest_2_application/pages/quiz_page.dart';
@@ -68,27 +69,36 @@ class GameState extends ChangeNotifier {
 
 class AppSettings extends ChangeNotifier {
   bool _isTimerEnabled = true;
+  bool _isHintEnabled = true;
 
   AppSettings() {
     _loadSettings();
   }
 
   bool get isTimerEnabled => _isTimerEnabled;
-
-  set isTimerEnabled(bool value) {
-    _isTimerEnabled = value;
-    _saveSettings();
+  set isTimerEnabled(bool newValue) {
+    _isTimerEnabled = newValue;
     notifyListeners();
+    _saveSettings();
+  }
+
+  bool get isHintEnabled => _isHintEnabled;
+  set isHintEnabled(bool newValue) {
+    _isHintEnabled = newValue;
+    notifyListeners();
+    _saveSettings();
   }
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     _isTimerEnabled = prefs.getBool('isTimerEnabled') ?? true;
+    _isHintEnabled = prefs.getBool('isHintEnabled') ?? true;
   }
 
   Future<void> _saveSettings() async {
     final prefs = await SharedPreferences.getInstance();
     prefs.setBool('isTimerEnabled', _isTimerEnabled);
+    prefs.setBool('isHintEnabled', _isHintEnabled); // Save hint setting
   }
 }
 
@@ -114,7 +124,8 @@ class MathGame extends StatelessWidget {
             '/settings': (context) => SettingsPage(appSettings: appSettings),
             '/level_selection': (context) => const LevelSelectionPage(),
             '/signin': (context) => const SignInPage(),
-            '/signup': (context) => const SignUpPage()
+            '/signup': (context) => const SignUpPage(),
+            '/performancecard': (context) => const PerformanceCardPage()
           },
         );
       },

@@ -6,6 +6,7 @@ import "package:flutter/material.dart";
 import "package:math_quest_2_application/main.dart";
 import "package:math_quest_2_application/reusables/theme.dart";
 import "package:math_quest_2_application/utils/color_utils.dart";
+import "package:math_quest_2_application/utils/performance_data_service.dart";
 import "package:provider/provider.dart";
 
 class QuizPage extends StatefulWidget {
@@ -25,6 +26,9 @@ class QuizPage extends StatefulWidget {
 }
 
 class _QuizPageState extends State<QuizPage> {
+  late DateTime _levelStartTime;
+  late DateTime _questionStartTime;
+
   //fixes the issue with timer not counting down after enabling
   @override
   void didUpdateWidget(covariant QuizPage oldWidget) {
@@ -64,6 +68,8 @@ class _QuizPageState extends State<QuizPage> {
   @override
   void initState() {
     super.initState();
+    _levelStartTime = DateTime.now();
+    _questionStartTime = DateTime.now();
     totalQuestionsAsked = 0;
     correctAnswers = 0;
     wrongAnswers = 0;
@@ -74,6 +80,7 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   void updateQuestion() {
+    _questionStartTime = DateTime.now();
     if (totalQuestionsAsked < 20) {
       setState(() {
         int range = getRangeBasedOnScore();
@@ -116,6 +123,7 @@ class _QuizPageState extends State<QuizPage> {
         options = List.from(originalOptions);
         options.shuffle();
         feedback = '';
+
         if (widget.isTimerEnabled) {
           timeLeft = 10;
         }
@@ -180,7 +188,8 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   void showHint() {
-    if (!hintUsed) {
+    var appSettings = Provider.of<AppSettings>(context, listen: false);
+    if (!hintUsed && appSettings.isHintEnabled) {
       setState(() {
         options = List.from(originalOptions);
         List<double> wrongOptions =
@@ -197,6 +206,8 @@ class _QuizPageState extends State<QuizPage> {
 
   void checkAnswer(double userAnswer) async {
     bool isCorrect = userAnswer == correctAnswer;
+    int timeTakenForQuestion =
+        DateTime.now().difference(_questionStartTime).inSeconds;
 
     setState(() {
       feedback = isCorrect ? 'Correct!' : 'Wrong!';
@@ -215,7 +226,15 @@ class _QuizPageState extends State<QuizPage> {
     // Delay for feedback visibility
     await Future.delayed(const Duration(seconds: 1));
 
-    // Update for next question or results dialog
+    // Update performance data
+    await PerformanceDataService.updatePerformanceData(
+      correctAnswers: isCorrect ? 1 : 0,
+      wrongAnswers: isCorrect ? 0 : 1,
+      hintsUsed: hintUsed ? 1 : 0,
+      timeSpentInSeconds: timeTakenForQuestion,
+    );
+
+    // Prepare for next question or show results
     setState(() {
       feedback = ''; // Clear feedback
       totalQuestionsAsked++;
@@ -234,6 +253,15 @@ class _QuizPageState extends State<QuizPage> {
   void showResultsDialog() {
     bool isLevelPassed = score >= 100;
     bool canProceedToNextLevel = isLevelPassed && widget.level < 10;
+    int totalTimeSpentInQuiz =
+        DateTime.now().difference(_levelStartTime).inSeconds;
+
+    PerformanceDataService.updatePerformanceData(
+      correctAnswers: correctAnswers,
+      wrongAnswers: wrongAnswers,
+      hintsUsed: hintUsed ? 1 : 0,
+      timeSpentInSeconds: totalTimeSpentInQuiz,
+    );
 
     showDialog(
       context: context,
@@ -318,7 +346,7 @@ class _QuizPageState extends State<QuizPage> {
         appBar: CustomAppBar(
           title: '${widget.operation}: Level ${widget.level}',
           showHomeButton: true,
-          showHintButton: true,
+          showHintButton: appSettings.isHintEnabled,
           onHintPressed: showHint,
           onHomePressed: () =>
               Navigator.pushReplacementNamed(context, '/level_selection'),

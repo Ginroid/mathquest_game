@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import 'package:math_quest_2_application/main.dart';
-import 'package:math_quest_2_application/reusables/theme.dart';
+import 'package:math_quest_2_application/utils/color_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -43,75 +43,54 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final appSettings = Provider.of<AppSettings>(context);
+
     return Scaffold(
-      appBar: const CustomAppBar(
-        title: 'Settings',
-        showHomeButton: false,
-        showHintButton: false,
+      appBar: AppBar(
+        title: const Text('Settings'),
+        backgroundColor: hexStringToActualColor("4E899A"),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'Volume',
-            ),
-            Slider(
-              value: volume,
-              min: 0,
-              max: 1,
-              divisions: 10,
-              label: volume.toStringAsFixed(1),
-              onChanged: (double value) {
-                setState(() {
-                  volume = value;
-                });
-                _saveSettings();
-              },
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                Column(
-                  children: <Widget>[
-                    const Text(
-                      'Sound Effects',
-                      style: TextStyle(fontSize: 24),
-                    ),
-                    Switch(
-                      value: volume == 0,
-                      onChanged: (bool value) {
-                        setState(() {
-                          volume = value ? 0 : 0.5;
-                        });
-                        _saveSettings();
-                      },
-                    ),
-                  ],
-                ),
-                Column(
-                  children: <Widget>[
-                    const Text(
-                      'Timer',
-                      style: TextStyle(fontSize: 24),
-                    ),
-                    Consumer<AppSettings>(
-                      builder: (context, appSettings, child) {
-                        return Switch(
-                          value: appSettings.isTimerEnabled,
-                          onChanged: (bool value) {
-                            appSettings.isTimerEnabled = value;
-                            _saveSettings();
-                          },
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
+      body: ListView(
+        children: [
+          SwitchListTile(
+            title: const Text('Timer'),
+            subtitle: const Text('Enable or disable the timer during games'),
+            value: appSettings.isTimerEnabled,
+            onChanged: (bool newValue) {
+              setState(() {
+                appSettings.isTimerEnabled = newValue;
+              });
+            },
+            secondary: const Icon(Icons.timer),
+          ),
+          SwitchListTile(
+            title: const Text('Hints'),
+            subtitle: const Text('Enable or disable hints during games'),
+            value: appSettings.isHintEnabled,
+            onChanged: (bool newValue) {
+              setState(() {
+                appSettings.isHintEnabled = newValue;
+              });
+            },
+            secondary: const Icon(Icons.lightbulb_outline),
+          ),
+          ListTile(
+            title: const Text('Performance Card'),
+            subtitle: const Text('View detailed performance statistics'),
+            trailing: const Icon(Icons.assessment),
+            onTap: () {
+              Navigator.pushNamed(context, '/performancecard');
+            },
+          ),
+          ListTile(
+            title: const Text('About'),
+            subtitle: const Text('Learn more about Math Quest'),
+            trailing: const Icon(Icons.info_outline),
+            onTap: () {
+              // Navigate to About Page
+            },
+          ),
+        ],
       ),
     );
   }
